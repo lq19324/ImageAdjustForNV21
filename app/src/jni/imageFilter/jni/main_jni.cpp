@@ -12,6 +12,7 @@
 #define max(a,b) ((a)>(b)?(a):(b))
 #define min(a,b) ((a)>(b)?(b):(a))
 
+/** Y代表亮度信息，直接调整y的值来改变亮度 */
 extern "C"
 JNIEXPORT void JNICALL Java_com_filter_lq_imagefilter_ImageFilterEngine_processBrightness
  (JNIEnv *env, jclass jcls, jbyteArray jnv21Data, jint width, jint height, jint progress){
@@ -37,7 +38,7 @@ JNIEXPORT void JNICALL Java_com_filter_lq_imagefilter_ImageFilterEngine_processB
     LOGI("########## processBrightness end #############\n");
   }
 
-
+/** 以128为原点，同比修改uv实现饱和度调整 */
 extern "C"
 JNIEXPORT void JNICALL Java_com_filter_lq_imagefilter_ImageFilterEngine_processSaturation
  (JNIEnv *env, jclass jcls, jbyteArray jnv21Data, jint width, jint height, jint progress){
@@ -48,9 +49,7 @@ JNIEXPORT void JNICALL Java_com_filter_lq_imagefilter_ImageFilterEngine_processS
     int startIdx = width * height;
     int end = startIdx + (width * height>>1);
     int vuValue = 0;
-    int max = 0, min = 0;
     float c = progress / 100.0f;//0~2
-    float s = sqrt(1 - c*c);
     LOGI("processSaturation c=%f", c);
     float v1, u1;
     int v, u;
@@ -70,12 +69,11 @@ JNIEXPORT void JNICALL Java_com_filter_lq_imagefilter_ImageFilterEngine_processS
     if (src_data_ref != NULL) {
         env->ReleaseByteArrayElements(jnv21Data, (jbyte*)src_data_ref, 0);
     }
-    LOGI("########## processSaturation max=%d min=%d", max, min);
 
     LOGI("########## processSaturation end #############\n");
   }
 
-
+/** 以128为阈值，等比增加或减小Y的值实现对比度的调整 */
 extern "C"
 JNIEXPORT void JNICALL Java_com_filter_lq_imagefilter_ImageFilterEngine_processContrast
  (JNIEnv *env, jclass jcls, jbyteArray jnv21Data, jint width, jint height, jint progress){
@@ -102,6 +100,11 @@ JNIEXPORT void JNICALL Java_com_filter_lq_imagefilter_ImageFilterEngine_processC
   }
 
 
+/**
+综合修改uv实现色调的调整，
+v' = v*cosQ - u*sinQ,
+u' = u*cosQ + v*sinQ.
+ */
   extern "C"
   JNIEXPORT void JNICALL Java_com_filter_lq_imagefilter_ImageFilterEngine_processColorTone
    (JNIEnv *env, jclass jcls, jbyteArray jnv21Data, jint width, jint height, jint progress){
@@ -138,6 +141,12 @@ JNIEXPORT void JNICALL Java_com_filter_lq_imagefilter_ImageFilterEngine_processC
       LOGI("########## processColorTone end #############\n");
     }
 
+/** u:blue, r:red,
+ r = r + adjustmentValue
+ g = g
+ b = b - adjustmentValue.
+ https://blog.csdn.net/skyplain1984/article/details/78859802
+ */
   extern "C"
   JNIEXPORT void JNICALL Java_com_filter_lq_imagefilter_ImageFilterEngine_processColorTemperature
    (JNIEnv *env, jclass jcls, jbyteArray jnv21Data, jint width, jint height, jint progress){
